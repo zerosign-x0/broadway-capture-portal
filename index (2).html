@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Broadway</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --gold:#C9A84C;--gold-dim:#7A6330;--gold-pale:#F5EDD4;
+  --black:#090908;--ink:#141310;--card:#1A1815;
+  --border:rgba(201,168,76,0.15);--text:#EAE4D8;
+  --muted:#6B6560;--white:#FAF7F2;
+  --help:#C9A84C;--browse:#4A7C6F;--browse-dim:#2A4A42;
+}
+html,body{height:100%;background:var(--black);color:var(--text);font-family:'DM Mono',monospace;font-weight:300;-webkit-font-smoothing:antialiased;overflow:hidden}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");opacity:0.5}
+.top-line{position:fixed;top:0;left:0;right:0;height:2px;z-index:50;background:linear-gradient(90deg,transparent,var(--gold-dim),var(--gold),var(--gold-dim),transparent)}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 28px 40px;opacity:0;pointer-events:none;transition:opacity 0.4s cubic-bezier(0.4,0,0.2,1),transform 0.4s cubic-bezier(0.4,0,0.2,1);transform:translateY(12px)}
+.screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
+.wordmark{position:absolute;top:28px;left:28px}
+.wm-name{font-family:'Libre Baskerville',Georgia,serif;font-size:18px;font-weight:700;letter-spacing:0.12em;color:var(--text);text-transform:uppercase}
+.wm-sub{font-size:8px;letter-spacing:0.22em;color:var(--gold);text-transform:uppercase;margin-top:3px;font-weight:500}
+
+/* SCREEN 1 */
+#s-mode{padding:0;flex-direction:row;align-items:stretch}
+.mode-half{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px 48px;cursor:pointer;position:relative;overflow:hidden;transition:all 0.25s ease;-webkit-user-select:none;user-select:none}
+.mode-half.help-side{background:#0F0E0B;border-right:1px solid rgba(201,168,76,0.08)}
+.mode-half.help-side::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,rgba(201,168,76,0.07) 0%,transparent 70%);transition:opacity 0.25s}
+.mode-half.help-side:active{background:#1A1710}
+.mode-half.browse-side{background:#090D0C}
+.mode-half.browse-side::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 60%,rgba(74,124,111,0.09) 0%,transparent 70%);transition:opacity 0.25s}
+.mode-half.browse-side:active{background:#0D1614}
+.split-header{position:absolute;top:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;padding-top:32px;pointer-events:none;z-index:10}
+.split-broadway{font-family:'Libre Baskerville',Georgia,serif;font-size:13px;font-weight:700;letter-spacing:0.28em;color:var(--text);text-transform:uppercase}
+.split-dot{width:3px;height:3px;border-radius:50%;background:var(--gold);margin-top:6px}
+.mode-basket{font-size:52px;line-height:1;margin-bottom:20px;position:relative;z-index:1;animation:float 3s ease-in-out infinite}
+.browse-side .mode-basket{animation-delay:0.4s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.mode-label{font-family:'Libre Baskerville',Georgia,serif;font-size:clamp(18px,4.5vw,24px);font-weight:400;line-height:1.2;text-align:center;position:relative;z-index:1;margin-bottom:10px}
+.help-side .mode-label{color:var(--gold-pale)}
+.browse-side .mode-label{color:#A8D4CB}
+.mode-desc{font-size:10px;letter-spacing:0.1em;text-align:center;color:var(--muted);position:relative;z-index:1;text-transform:uppercase;line-height:1.6}
+.split-divider{position:absolute;top:20%;bottom:20%;left:50%;width:1px;background:rgba(255,255,255,0.04);pointer-events:none;z-index:5;transform:translateX(-50%)}
+.tap-label{position:absolute;bottom:28px;left:0;right:0;text-align:center;font-size:9px;letter-spacing:0.2em;color:rgba(107,101,96,0.4);text-transform:uppercase;pointer-events:none;z-index:10}
+
+/* SCREEN 2 */
+#s-contact{max-width:400px;width:100%;margin:0 auto}
+.contact-eyebrow{font-size:8px;letter-spacing:0.26em;text-transform:uppercase;font-weight:500;margin-bottom:16px}
+.contact-eyebrow.help{color:var(--gold)}
+.contact-eyebrow.browse{color:var(--browse)}
+.contact-heading{font-family:'Libre Baskerville',Georgia,serif;font-size:clamp(26px,7vw,36px);font-weight:400;line-height:1.15;color:var(--text);margin-bottom:6px}
+.contact-heading em{font-style:italic}
+.contact-sub{font-size:12px;color:var(--muted);margin-bottom:36px;line-height:1.6}
+.field{display:flex;flex-direction:column;margin-bottom:20px}
+.field-label{font-size:8px;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:10px}
+.field-wrap{position:relative}
+.field-prefix{position:absolute;left:0;bottom:12px;font-size:17px;color:var(--muted);pointer-events:none;font-family:'DM Mono',monospace}
+.field-input{width:100%;background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.1);color:var(--text);font-family:'DM Mono',monospace;font-size:17px;font-weight:300;padding:4px 0 12px;outline:none;border-radius:0;-webkit-appearance:none;transition:border-color 0.2s}
+.field-input.has-prefix{padding-left:40px}
+.field-input::placeholder{color:rgba(255,255,255,0.16)}
+.field-input:focus{border-bottom-color:var(--gold)}
+.field-input.browse-mode:focus{border-bottom-color:var(--browse)}
+.field-error{font-size:9px;color:#C0503A;letter-spacing:0.1em;text-transform:uppercase;margin-top:6px;opacity:0;transition:opacity 0.2s}
+.field-error.show{opacity:1}
+.submit-btn{width:100%;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;letter-spacing:0.22em;text-transform:uppercase;padding:18px 24px;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.18s;min-height:56px}
+.submit-btn.help-btn{background:var(--gold);color:var(--black)}
+.submit-btn.browse-btn{background:var(--browse);color:var(--white)}
+.submit-btn:hover{opacity:0.9;transform:translateY(-1px)}
+.submit-btn:active{transform:translateY(0)}
+.btn-arrow{transition:transform 0.18s}
+.submit-btn:hover .btn-arrow{transform:translateX(4px)}
+.privacy{font-size:9px;color:rgba(107,101,96,0.5);text-align:center;margin-top:14px;line-height:1.6}
+
+/* SCREEN 3 */
+#s-confirm{max-width:400px;width:100%;margin:0 auto}
+.confirm-icon{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:28px;animation:pop 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.1s both}
+.confirm-icon.help-icon{border:1px solid var(--gold)}
+.confirm-icon.browse-icon{border:1px solid var(--browse)}
+@keyframes pop{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+.confirm-title{font-family:'Libre Baskerville',Georgia,serif;font-size:clamp(28px,8vw,40px);font-weight:400;line-height:1.1;margin-bottom:12px}
+.confirm-sub{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:32px;max-width:300px}
+.status-card{width:100%;padding:22px;margin-bottom:20px;position:relative}
+.status-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.status-card.help-card{background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18)}
+.status-card.help-card::before{background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.status-card.browse-card{background:rgba(74,124,111,0.06);border:1px solid rgba(74,124,111,0.2)}
+.status-card.browse-card::before{background:linear-gradient(90deg,transparent,var(--browse),transparent)}
+.status-label{font-size:8px;letter-spacing:0.24em;text-transform:uppercase;font-weight:500;margin-bottom:10px}
+.help-card .status-label{color:var(--gold)}
+.browse-card .status-label{color:var(--browse)}
+.status-text{font-size:13px;color:var(--text);line-height:1.7}
+.pulse-wrap{display:flex;align-items:center;gap:10px;margin-top:14px}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.3;transform:scale(0.7)}}
+.pulse-text{font-size:10px;letter-spacing:0.1em;color:var(--gold);text-transform:uppercase}
+.reset-btn{background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);padding:20px 0 0;width:100%;text-align:center;transition:color 0.15s}
+.reset-btn:hover{color:var(--gold)}
+.page-footer{position:fixed;bottom:0;left:0;right:0;padding:10px 24px;text-align:center;font-size:8px;color:rgba(107,101,96,0.25);letter-spacing:0.08em;pointer-events:none;z-index:10}
+</style>
+</head>
+<body>
+<div class="top-line"></div>
+
+<!-- SCREEN 1 — MODE SPLIT -->
+<div class="screen active" id="s-mode">
+  <div class="split-header">
+    <div class="split-broadway">Broadway</div>
+    <div class="split-dot"></div>
+  </div>
+  <div class="split-divider"></div>
+  <div class="mode-half help-side" onclick="selectMode('help')" role="button">
+    <div class="mode-basket">🟡</div>
+    <div class="mode-label">I'd love<br>some help</div>
+    <div class="mode-desc">A stylist will<br>find you shortly</div>
+  </div>
+  <div class="mode-half browse-side" onclick="selectMode('browse')" role="button">
+    <div class="mode-basket">🔵</div>
+    <div class="mode-label">I'll explore<br>on my own</div>
+    <div class="mode-desc">Browse freely,<br>zero interruptions</div>
+  </div>
+  <div class="tap-label">Tap to continue</div>
+</div>
+
+<!-- SCREEN 2 — CONTACT -->
+<div class="screen" id="s-contact">
+  <div class="wordmark">
+    <div class="wm-name">Broadway</div>
+    <div class="wm-sub store-name">Ambience Mall, Delhi</div>
+  </div>
+  <div id="contact-eyebrow" class="contact-eyebrow help">Assistance Mode</div>
+  <h2 class="contact-heading" id="contact-heading">So we know<br>who you <em>are.</em></h2>
+  <p class="contact-sub" id="contact-sub">Your stylist will greet you by name.</p>
+  <div class="field">
+    <label class="field-label" for="f-name">First name</label>
+    <input class="field-input" type="text" id="f-name" placeholder="Your name" autocomplete="given-name" autocapitalize="words">
+    <div class="field-error" id="err-name">Please enter your name</div>
+  </div>
+  <div class="field">
+    <label class="field-label" for="f-wa">WhatsApp</label>
+    <div class="field-wrap">
+      <span class="field-prefix">+91</span>
+      <input class="field-input has-prefix" type="tel" id="f-wa" placeholder="98765 43210" inputmode="numeric" autocomplete="tel">
+    </div>
+    <div class="field-error" id="err-wa">Valid 10-digit number needed</div>
+  </div>
+  <button class="submit-btn help-btn" id="submit-btn" onclick="submitContact()">
+    I'm ready <span class="btn-arrow">→</span>
+  </button>
+  <p class="privacy">We only message you about things relevant to your visit.<br>Reply STOP any time.</p>
+</div>
+
+<!-- SCREEN 3 — CONFIRMATION -->
+<div class="screen" id="s-confirm">
+  <div class="wordmark">
+    <div class="wm-name">Broadway</div>
+    <div class="wm-sub store-name">Ambience Mall, Delhi</div>
+  </div>
+  <div class="confirm-icon help-icon" id="confirm-icon">✓</div>
+  <h2 class="confirm-title" id="confirm-title">Welcome,<br><span id="confirm-name" style="color:var(--gold)">there.</span></h2>
+  <p class="confirm-sub" id="confirm-sub">A Broadway stylist has been notified and will find you shortly.</p>
+  <div class="status-card help-card" id="status-card">
+    <div class="status-label" id="status-label">Stylist notified</div>
+    <div class="status-text" id="status-text">Our team knows your name. Explore Broadway — they'll find you.</div>
+    <div class="pulse-wrap" id="pulse-wrap">
+      <div class="pulse-dot"></div>
+      <div class="pulse-text">Staff alerted</div>
+    </div>
+  </div>
+  <button class="reset-btn" onclick="resetAll()">Next visitor ↺</button>
+</div>
+
+<div class="page-footer">Broadway · THINKNEW CONSUMER PVT LTD · 2026</div>
+
+<script>
+let mode = null;
+const params = new URLSearchParams(location.search);
+const store = params.get('store') || 'delhi';
+const storeMap = {delhi:'Ambience Mall, Delhi', hyd:'Banjara Hills, Hyderabad'};
+const storeName = storeMap[store] || storeMap.delhi;
+document.querySelectorAll('.store-name').forEach(el => el.textContent = storeName);
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  requestAnimationFrame(() => {
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+  });
+}
+
+function selectMode(m) {
+  mode = m;
+  const isHelp = m === 'help';
+  document.getElementById('contact-eyebrow').textContent = isHelp ? 'Assistance Mode' : 'Browse Mode';
+  document.getElementById('contact-eyebrow').className = 'contact-eyebrow ' + (isHelp ? 'help' : 'browse');
+  document.getElementById('contact-heading').innerHTML = isHelp ? 'So we know<br>who you <em>are.</em>' : 'Your space.<br>Your <em>pace.</em>';
+  document.getElementById('contact-sub').textContent = isHelp ? 'Your stylist will greet you by name.' : 'No interruptions. We\'ll check in after your visit.';
+  document.getElementById('submit-btn').className = 'submit-btn ' + (isHelp ? 'help-btn' : 'browse-btn');
+  document.getElementById('f-wa').className = 'field-input has-prefix' + (isHelp ? '' : ' browse-mode');
+  goTo('s-contact');
+  setTimeout(() => document.getElementById('f-name').focus(), 450);
+}
+
+function submitContact() {
+  const name = document.getElementById('f-name').value.trim();
+  const waRaw = document.getElementById('f-wa').value.replace(/\s/g,'');
+  const waClean = waRaw.replace(/^\+?91/,'');
+  document.querySelectorAll('.field-error').forEach(e => e.classList.remove('show'));
+  document.querySelectorAll('.field-input').forEach(i => i.style.borderBottomColor = '');
+  let valid = true;
+  if (!name) { document.getElementById('err-name').classList.add('show'); document.getElementById('f-name').style.borderBottomColor='#C0503A'; valid=false; }
+  if (!waClean || waClean.length !== 10 || !/^[6-9]\d{9}$/.test(waClean)) { document.getElementById('err-wa').classList.add('show'); document.getElementById('f-wa').style.borderBottomColor='#C0503A'; valid=false; }
+  if (!valid) return;
+  const isHelp = mode === 'help';
+
+  // PRODUCTION: uncomment to wire to n8n
+  // fetch('https://YOUR-N8N-WEBHOOK/broadway-visitor', {
+  //   method:'POST', headers:{'Content-Type':'application/json'},
+  //   body: JSON.stringify({name, whatsapp:'+91'+waClean, mode, store, timestamp:new Date().toISOString()})
+  // }).catch(console.error);
+
+  document.getElementById('confirm-icon').className = 'confirm-icon ' + (isHelp ? 'help-icon' : 'browse-icon');
+  document.getElementById('confirm-icon').textContent = isHelp ? '✓' : '◎';
+  document.getElementById('confirm-title').innerHTML = isHelp
+    ? `Welcome,<br><span style="color:var(--gold)">${name}.</span>`
+    : `Broadway is<br><span style="color:var(--browse)">all yours.</span>`;
+  document.getElementById('confirm-sub').textContent = isHelp
+    ? 'A stylist has been notified and will find you by name shortly.'
+    : 'Zero interruptions, guaranteed. Enjoy at your own pace.';
+  document.getElementById('status-card').className = 'status-card ' + (isHelp ? 'help-card' : 'browse-card');
+  document.getElementById('status-label').textContent = isHelp ? 'Stylist notified' : 'Browse mode active';
+  document.getElementById('status-text').textContent = isHelp
+    ? `Our team knows your name, ${name}. Explore Broadway — they'll find you.`
+    : `No one will approach you unless you ask. We'll message you after your visit with things you might have missed.`;
+  document.getElementById('pulse-wrap').style.display = isHelp ? 'flex' : 'none';
+  goTo('s-confirm');
+}
+
+function resetAll() {
+  mode = null;
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-wa').value = '';
+  document.querySelectorAll('.field-error').forEach(e => e.classList.remove('show'));
+  document.querySelectorAll('.field-input').forEach(i => i.style.borderBottomColor='');
+  goTo('s-mode');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('s-contact').classList.contains('active')) submitContact();
+});
+</script>
+</body>
+</html>
